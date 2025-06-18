@@ -1,0 +1,133 @@
+import 'package:flutter/material.dart';
+import 'dart:ui';
+import 'package:sonara/core/utils/colors.dart';
+import 'package:sonara/core/utils/extensions/device_query_extensions.dart';
+
+class SplashBackground extends StatefulWidget {
+  final Widget? child;
+  const SplashBackground({super.key, this.child});
+
+  @override
+  State<SplashBackground> createState() => _SplashBackgroundState();
+}
+
+class _SplashBackgroundState extends State<SplashBackground> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Container(
+        width: double.maxFinite,
+        height: double.maxFinite,
+        alignment: Alignment.center,
+        color: AppColors.background_2,
+        child: Stack(
+          children: [
+            SizedBox(
+              width: double.maxFinite,
+              height: double.maxFinite,
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                      child: Container(
+                        width: double.maxFinite,
+                        height: context.screenSize.height * .45,
+                        color: AppColors.background,
+                      ),
+                    ),
+                  ),
+
+                  // Three large circles positioned low near the bottom
+                  // Circle 1
+                  Positioned(
+                    bottom: context.screenSize.height * 0.1,
+                    right: context.screenSize.width * -0.1,
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                      child: Container(
+                        width: context.screenSize.width * 0.4,
+                        height: context.screenSize.height * 0.4,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.pink.withOpacity(0.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.pink.withOpacity(0.25),
+                              blurRadius: 80,
+                              spreadRadius: 50,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Circle 2
+                  Positioned(
+                    bottom: context.screenSize.height * 0.005,
+                    left: context.screenSize.width * -0.2,
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                      child: Container(
+                        width: context.screenSize.width * 0.8,
+                        height: context.screenSize.height * 0.65,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.purple.withOpacity(0.00),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.purple.withOpacity(0.2),
+                              blurRadius: 70,
+                              spreadRadius: 10,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Circle 3
+                  Positioned(
+                    bottom: context.screenSize.height * .01,
+                    left: context.screenSize.width * .2,
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 10.0),
+                      child: Container(
+                        width: context.screenSize.width * 0.5,
+                        height: context.screenSize.height * 0.3,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.purple_2.withOpacity(0.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.pink_2.withOpacity(0.2),
+                              blurRadius: 100,
+                              spreadRadius: 70,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Semi-transparent overlay for overall background softness
+                  Container(
+                    width: double.maxFinite,
+                    height: double.maxFinite,
+                    color: Colors.black.withOpacity(0.6),
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox.expand(child: widget.child),
+          ],
+        ),
+      ),
+    );
+  }
+}
