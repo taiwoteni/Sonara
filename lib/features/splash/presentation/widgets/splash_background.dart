@@ -5,7 +5,8 @@ import 'package:sonara/core/utils/extensions/device_query_extensions.dart';
 
 class SplashBackground extends StatefulWidget {
   final Widget? child;
-  const SplashBackground({super.key, this.child});
+  final Widget? floatingActionButton;
+  const SplashBackground({super.key, this.child, this.floatingActionButton});
 
   @override
   State<SplashBackground> createState() => _SplashBackgroundState();
@@ -16,6 +17,8 @@ class _SplashBackgroundState extends State<SplashBackground> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      floatingActionButton: widget.floatingActionButton,
+      resizeToAvoidBottomInset: false,
       body: Container(
         width: double.maxFinite,
         height: double.maxFinite,

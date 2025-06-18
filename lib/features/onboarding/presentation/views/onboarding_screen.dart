@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sonara/core/utils/extensions/device_query_extensions.dart';
 import 'package:sonara/features/onboarding/data/datasources/onboarding_items_datasource.dart';
 import 'package:sonara/features/splash/presentation/widgets/splash_background.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -23,6 +25,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return SplashBackground(
+      floatingActionButton: _currentPage == onboardingItems.length - 1
+          ? Padding(
+              padding: EdgeInsetsGeometry.all(1),
+              child: FloatingActionButton.small(
+                onPressed: () {
+                  context.push('/home');
+                },
+                backgroundColor: Colors.white,
+                shape: const CircleBorder(),
+                child: const Icon(
+                  IconsaxPlusLinear.arrow_right,
+                  color: Colors.black,
+                ),
+              ),
+            )
+          : null,
       child: SafeArea(
         child: Column(
           children: [
@@ -76,7 +94,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.only(bottom: 40),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
