@@ -25,12 +25,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return SplashBackground(
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: _currentPage == onboardingItems.length - 1
           ? Padding(
               padding: EdgeInsetsGeometry.all(1),
               child: FloatingActionButton.small(
                 onPressed: () {
-                  context.push('/home');
+                  context.replaceNamed('discover');
                 },
                 backgroundColor: Colors.white,
                 shape: const CircleBorder(),

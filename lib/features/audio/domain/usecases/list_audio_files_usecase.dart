@@ -1,4 +1,4 @@
-import 'package:sonara/features/audio/domain/entities/audio_file.dart';
+import 'package:sonara/features/audio/domain/entities/song.dart';
 import 'package:sonara/features/audio/domain/repositories/audio_repository.dart';
 
 /// Use case for listing audio files
@@ -9,7 +9,7 @@ class ListAudioFilesUseCase {
   ListAudioFilesUseCase(this._repository);
 
   /// Execute the use case to list audio files
-  Future<List<AudioFile>> execute() async {
+  Future<List<Song>> execute() async {
     // First ensure we have permissions
     bool hasPermission = await _repository.requestPermissions();
     if (!hasPermission) {

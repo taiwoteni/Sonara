@@ -1,5 +1,5 @@
 import 'package:sonara/features/audio/data/datasources/audio_data_source.dart';
-import 'package:sonara/features/audio/domain/entities/audio_file.dart';
+import 'package:sonara/features/audio/domain/entities/song.dart';
 import 'package:sonara/features/audio/domain/repositories/audio_repository.dart';
 
 /// Implementation of the AudioRepository interface
@@ -10,7 +10,7 @@ class AudioRepositoryImpl implements AudioRepository {
   AudioRepositoryImpl(this._dataSource);
 
   @override
-  Future<List<AudioFile>> listAudioFiles() {
+  Future<List<Song>> listAudioFiles() {
     return _dataSource.listAudioFiles();
   }
 

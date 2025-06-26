@@ -1,9 +1,8 @@
 import 'dart:developer';
-import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sonara/features/audio/domain/entities/audio_file.dart';
+import 'package:sonara/features/audio/domain/entities/song.dart';
 
 class AudioFileService {
   /// Method channel for communicating with platform-specific code
@@ -19,10 +18,8 @@ class AudioFileService {
       if (!status.isGranted) {
         status = await Permission.storage.request();
       }
-      if (Platform.isAndroid) {
-        status = await Permission.audio
-            .request(); // For Android, we need to request audio permission
-      }
+      status = await Permission.audio
+          .request(); // For Android, we need to request audio permission
 
       return status.isGranted;
     } catch (e) {
@@ -33,7 +30,7 @@ class AudioFileService {
 
   /// Lists all audio files on the device using platform-specific implementation.
   /// Returns a list of AudioFile objects if permission is granted, otherwise an empty list.
-  Future<List<AudioFile>> listAudioFiles() async {
+  Future<List<Song>> listAudioFiles() async {
     try {
       // First check if we have the necessary permissions
       bool hasPermission = await requestPermissions();
@@ -50,7 +47,7 @@ class AudioFileService {
       // Convert the result to a list of AudioFile objects
       return result
           .cast<Map<dynamic, dynamic>>()
-          .map((map) => AudioFile.fromMap(Map<String, dynamic>.from(map)))
+          .map((map) => Song.fromMap(Map<String, dynamic>.from(map)))
           .toList();
     } on PlatformException catch (e) {
       log("Platform error when listing audio files: $e");
