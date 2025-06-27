@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonara/features/ai/presentation/views/ai_page.dart';
+import 'package:sonara/features/playlists/domain/entities/playlist.dart';
+import 'package:sonara/features/playlists/presentation/views/playlist_screen.dart';
 import 'package:sonara/features/songs/presentation/widgets/songs_list.dart';
 import 'package:sonara/features/home/presentation/views/home_screen.dart';
 import 'package:sonara/features/splash/presentation/views/splash_screen.dart';
@@ -24,6 +26,7 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: '/onboarding',
+      name: 'onboarding',
       builder: (BuildContext context, GoRouterState state) {
         return const OnboardingScreen();
       },
@@ -96,6 +99,12 @@ final GoRouter router = GoRouter(
         return SongScreen(song: song);
       },
     ),
-    // Add more routes here as needed (e.g., home, login)
+
+    GoRoute(
+      path: '/playlist/:playlistId',
+      builder: (context, state) {
+        return PlaylistScreen(playlist: state.extra as Playlist);
+      },
+    ),
   ],
 );

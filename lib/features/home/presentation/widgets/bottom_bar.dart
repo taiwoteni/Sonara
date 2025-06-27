@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:sonara/core/utils/colors.dart';
 import 'package:sonara/features/songs/presentation/widgets/mini_player.dart';
 import 'package:sonara/features/home/data/datasources/navigation_menu_datasource.dart';
@@ -172,26 +172,8 @@ class SonaraBottomBar extends StatelessWidget {
           ),
           shape: BoxShape.circle,
         ),
-        child: Icon(IconsaxPlusLinear.cpu),
+        child: Icon(HugeIcons.strokeRoundedStars),
       ),
-    );
-  }
-}
-
-// Optional: Floating Action Button to be used with the notch
-class SonaraFAB extends StatelessWidget {
-  const SonaraFAB({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton(
-      shape: const StadiumBorder(),
-      tooltip: 'Sonara AI',
-      onPressed: () {
-        // Placeholder for central action
-      },
-      backgroundColor: AppColors.purple,
-      child: const Icon(IconsaxPlusBold.cpu, color: Colors.white, size: 28),
     );
   }
 }

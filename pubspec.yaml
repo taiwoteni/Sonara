@@ -49,6 +49,9 @@ dependencies:
   path_provider: ^2.1.3
   riverpod_annotation: ^2.6.1
   hugeicons: ^0.0.11
+  equatable: ^2.0.7
+  dartz: ^0.10.1
+  flutter_svg: ^2.2.0
 
 dev_dependencies:
   flutter_test:

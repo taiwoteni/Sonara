@@ -17,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
       // Add a delay to simulate loading or transition to the next screen
       Future.delayed(const Duration(seconds: 3), () {
         // Navigate to the onboarding screen using GoRouter
-        context.go('/onboarding');
+        context.goNamed('onboarding');
       });
     });
   }

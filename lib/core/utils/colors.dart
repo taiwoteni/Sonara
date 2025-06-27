@@ -7,4 +7,5 @@ class AppColors {
   static const Color purple_2 = Color(0xFFA855F7);
   static const Color pink = Color(0xFFEC4899);
   static const Color pink_2 = Color(0xFFF472B6);
+  static const Color greyBackground = Color(0xFF1A1919);
 }

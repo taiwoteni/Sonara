@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -28,20 +29,6 @@ class SongWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Debug print to check if thumbnailData is available
-    print(
-      'Song: ${audio.title}, Thumbnail Data Available: ${audio.thumbnailData.isNotEmpty}',
-    );
-    if (audio.thumbnailData.isNotEmpty) {
-      print('Thumbnail Data Length: ${audio.thumbnailData.length}');
-      // Print a snippet of the base64 data for debugging
-      if (audio.thumbnailData.length > 50) {
-        print('Base64 Snippet: ${audio.thumbnailData.substring(0, 50)}...');
-      } else {
-        print('Base64 Snippet: ${audio.thumbnailData}');
-      }
-    }
-
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
       color: Colors.transparent,
@@ -114,7 +101,7 @@ class SongWidget extends StatelessWidget {
             IconButton(
               icon: const Icon(
                 IconsaxPlusLinear.more,
-                size: 18,
+                size: 13,
                 color: Colors.white,
               ),
               onPressed: onMoreTap,
@@ -181,8 +168,12 @@ class SongWidget extends StatelessWidget {
         height: double.maxFinite,
       );
     } catch (e, stackTrace) {
-      print('Exception decoding base64 for $title: $e');
-      print('Stack trace: $stackTrace');
+      log(
+        'Exception decoding base64 for $title',
+        error: e,
+        stackTrace: stackTrace,
+        name: 'SongWidget',
+      );
       return defaultThumbnailWidget();
     }
   }
