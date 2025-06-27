@@ -1,0 +1,22 @@
+This is a flutter application.
+A music application.
+
+The flutter project uses getIt, riverpod, go_router and CLEAN architecture.
+It has it's theme config so never overwrite it.
+
+DO NOT override any sensitive code. Do not even bother asking for permission.
+Files like sonara.dart and router.dart have themeing and routing configurations respectively.
+You have no write or permission to make any subtraction in those files. And DON'T fucking change my code. 
+
+I've implemented song listing using Method Channels.
+I also implemented features to store high quality thumbnails in application support directory.
+
+When a song is clicked, a mini player appears first and a music notification is posted.
+When the mini player is clicked, user is directed to a song screen.
+
+I've added song searchning (filtering).
+
+Now I'm on the verge of fully integrating playlist features.
+I've integrated local playlist as well as their caching and dummy data but we're making use of real playlist implementation.
+You suggested using the hybrid approach.
+In your words:

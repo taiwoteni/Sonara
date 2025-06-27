@@ -26,96 +26,96 @@ class _CreatePlaylistDialogState extends State<CreatePlaylistDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.greyBackground,
-      borderRadius: BorderRadius.circular(12.0),
-      child: Container(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Create New Playlist',
-              style: context.lufgaBold.copyWith(
-                color: Colors.white,
-                fontSize: 20.0,
-                fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      decoration: BoxDecoration(
+        color: AppColors.greyBackground,
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Create New Playlist',
+            style: context.lufgaBold.copyWith(
+              color: Colors.white,
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Gap(10),
+          const Text(
+            'Enter a name for your new playlist',
+            style: TextStyle(color: Colors.white70, fontSize: 14.0),
+          ),
+          const SizedBox(height: 20.0),
+          TextField(
+            controller: _nameController,
+            decoration: InputDecoration(
+              hintText: 'Playlist name..',
+              hintStyle: context.spaceGroteskRegular.copyWith(
+                color: Colors.white54,
+              ),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.09),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 12.0,
               ),
             ),
-            Gap(10),
-            const Text(
-              'Enter a name for your new playlist',
-              style: TextStyle(color: Colors.white70, fontSize: 14.0),
+            style: context.spaceGroteskRegular.copyWith(
+              fontSize: 14,
+              color: Colors.white,
             ),
-            const SizedBox(height: 20.0),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                hintText: 'Playlist name..',
-                hintStyle: context.spaceGroteskRegular.copyWith(
-                  color: Colors.white54,
-                ),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.09),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 12.0,
+          ),
+          const SizedBox(height: 24.0),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () {
+                  if (widget.onCancel != null) {
+                    widget.onCancel!();
+                  }
+                },
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(fontSize: 13, color: Colors.white60),
                 ),
               ),
-              style: context.spaceGroteskRegular.copyWith(
-                fontSize: 14,
-                color: Colors.white,
+              const SizedBox(width: 16.0),
+              ElevatedButton(
+                onPressed: () {
+                  final name = _nameController.text.trim();
+                  if (name.isNotEmpty && widget.onCreate != null) {
+                    widget.onCreate!(
+                      name,
+                      (_) => setState(() => isLoading = !isLoading),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.purple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: Text(
+                  isLoading ? 'Loading...' : 'Create',
+                  style: context.lufgaSemiBold.copyWith(
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 24.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    if (widget.onCancel != null) {
-                      widget.onCancel!();
-                    }
-                  },
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(fontSize: 13, color: Colors.white60),
-                  ),
-                ),
-                const SizedBox(width: 16.0),
-                ElevatedButton(
-                  onPressed: () {
-                    final name = _nameController.text.trim();
-                    if (name.isNotEmpty && widget.onCreate != null) {
-                      widget.onCreate!(
-                        name,
-                        (_) => setState(() => isLoading = !isLoading),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.purple,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                  ),
-                  child: Text(
-                    isLoading ? 'Loading...' : 'Create',
-                    style: context.lufgaSemiBold.copyWith(
-                      fontSize: 13,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }

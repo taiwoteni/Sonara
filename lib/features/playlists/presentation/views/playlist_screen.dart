@@ -1,53 +1,87 @@
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:sonara/core/utils/extensions/device_query_extensions.dart';
+import 'package:sonara/core/utils/theme.dart';
 import 'package:sonara/features/songs/presentation/widgets/songs_list.dart';
 import 'package:sonara/features/playlists/domain/entities/playlist.dart';
+import 'package:sonara/features/splash/presentation/widgets/splash_background.dart';
 
-class PlaylistScreen extends StatelessWidget {
+class PlaylistScreen extends StatefulWidget {
   final Playlist playlist;
-
   const PlaylistScreen({super.key, required this.playlist});
 
   @override
+  State<PlaylistScreen> createState() => _PlaylistScreenState();
+}
+
+class _PlaylistScreenState extends State<PlaylistScreen> {
+  late Playlist playlist;
+
+  @override
+  void initState() {
+    playlist = widget.playlist;
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(playlist.name),
-        backgroundColor: Colors.grey[900],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+    return SplashBackground(
+      type: SplashBacgroundType.spread,
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${playlist.songs.length} songs',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 16.0),
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () {
-                        // TODO: Implement add song to playlist functionality
-                      },
-                      tooltip: 'Add Song',
+            Container(
+              width: double.maxFinite,
+              height: 150,
+              padding: EdgeInsets.symmetric(
+                horizontal: 15,
+              ).copyWith(top: context.statusBarPadding),
+              color: Colors.black.withValues(alpha: .2),
+              child: Row(
+                spacing: 20,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      shape: BoxShape.circle,
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.file_download),
-                      onPressed: () {
-                        // TODO: Implement export playlist functionality
-                      },
-                      tooltip: 'Export Playlist',
+                    alignment: Alignment.center,
+                    child: Icon(
+                      IconsaxPlusLinear.music_filter,
+                      color: Colors.white.withOpacity(0.9),
+                      size: 25,
                     ),
-                  ],
-                ),
-              ],
+                  ),
+
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 4,
+                    children: [
+                      Text(
+                        playlist.name,
+                        style: context.lufgaBold.copyWith(fontSize: 20),
+                      ),
+
+                      Text(
+                        "${playlist.songs.length} songs",
+                        style: context.spaceGroteskRegular.copyWith(
+                          fontSize: 14,
+                          color: Colors.white54,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16.0),
-            Expanded(child: SongsList(songs: playlist.songs)),
+            Gap(15),
+            SongsList(songs: playlist.songs),
           ],
         ),
       ),

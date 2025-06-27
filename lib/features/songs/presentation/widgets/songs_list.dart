@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
+import 'package:sonara/core/utils/dialog_manager.dart';
 import 'package:sonara/core/utils/services/audio_player_helper.dart';
 import 'package:sonara/features/audio/domain/entities/song.dart';
+import 'package:sonara/features/playlists/presentation/widgets/add_song_to_playlist_dialog.dart';
 import 'package:sonara/features/songs/presentation/widgets/song_widget.dart';
 import 'dart:developer';
 
@@ -29,6 +31,13 @@ class SongsList extends StatelessWidget {
       shrinkWrap: true,
       itemBuilder: (context, index) => SongWidget(
         audio: songs[index],
+        onMoreTap: () {
+          DialogManager.showCustomDialog(
+            context: context,
+            builder: (context) =>
+                Dialog(child: AddSongToPlaylistDialog(song: songs[index])),
+          );
+        },
         onTap: () async {
           final song = songs[index];
           String? highQualityArtworkData;

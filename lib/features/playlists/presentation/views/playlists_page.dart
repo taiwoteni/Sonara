@@ -1,45 +1,25 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
-import 'package:sonara/core/di/service_locator.dart';
 import 'package:sonara/core/utils/dialog_manager.dart';
 import 'package:sonara/core/utils/extensions/device_query_extensions.dart';
 import 'package:sonara/core/utils/extensions/transforms_extensions.dart';
 import 'package:sonara/core/utils/theme.dart';
 import 'package:sonara/features/home/presentation/widgets/search_bar.dart';
-import 'package:sonara/features/playlists/domain/entities/playlist.dart';
-import 'package:sonara/features/playlists/domain/usecases/create_playlist.dart';
-import 'package:sonara/features/playlists/domain/usecases/create_playlist_params.dart';
+import 'package:sonara/features/playlists/presentation/providers/playlist_notifier.dart';
 import 'package:sonara/features/playlists/presentation/widgets/create_playlist_dialog.dart';
 import 'package:sonara/features/playlists/presentation/widgets/playlist_list.dart';
 
-class PlaylistsPage extends StatefulWidget {
+class PlaylistsPage extends ConsumerWidget {
   const PlaylistsPage({super.key});
 
   @override
-  State<PlaylistsPage> createState() => _PlaylistsPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playlists = ref.watch(playlistProvider);
+    final playlistNotifier = ref.read(playlistProvider.notifier);
 
-class _PlaylistsPageState extends State<PlaylistsPage> {
-  // This is a placeholder list of playlists for demonstration purposes
-  final List<Playlist> dummyPlaylists = [
-    Playlist(id: '1', name: 'Favorites', songs: []),
-    Playlist(id: '2', name: 'Chill Vibes', songs: []),
-    Playlist(id: '3', name: 'Workout Mix', songs: []),
-  ];
-  late CreatePlaylist createPlaylistUseCase;
-
-  @override
-  void initState() {
-    createPlaylistUseCase = getIt<CreatePlaylist>();
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: context.safeAreaInsets.copyWith(left: 16, right: 16),
       child: Column(
@@ -57,7 +37,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
                 style: context.lufgaBold.copyWith(fontSize: 16),
               ),
               TextButton(
-                onPressed: createPlaylist,
+                onPressed: () => createPlaylist(context, playlistNotifier),
                 child: RichText(
                   text: TextSpan(
                     style: context.lufgaMedium.copyWith(color: Colors.white70),
@@ -78,7 +58,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
           ),
           Gap(16),
           PlaylistList(
-            playlists: dummyPlaylists,
+            playlists: playlists,
             onPlaylistTap: (playlist) {
               context.push('/playlist/${playlist.id}', extra: playlist);
             },
@@ -88,7 +68,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
     );
   }
 
-  Future<void> createPlaylist() async {
+  Future<void> createPlaylist(
+    BuildContext context,
+    PlaylistNotifier playlistNotifier,
+  ) async {
     await DialogManager.showCustomDialog(
       context: context,
       builder: (context) {
@@ -97,29 +80,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> {
             onCancel: () => context.pop(),
             onCreate: (text, load) async {
               load(true);
-              final result = await createPlaylistUseCase.call(
-                CreatePlaylistParams(name: text),
-              );
-
-              final data = result.fold(
-                (failure) {
-                  log(
-                    "Failed to create playlist",
-                    name: 'PlaylistsPage',
-                    error: failure,
-                  );
-                  return null;
-                },
-                (r) {
-                  setState(() {
-                    dummyPlaylists.add(r);
-                  });
-                  return r;
-                },
-              );
-
+              await playlistNotifier.createPlaylist(text);
               load(false);
-              if (!mounted) return;
+              if (!context.mounted) return;
               context.pop();
             },
           ),
