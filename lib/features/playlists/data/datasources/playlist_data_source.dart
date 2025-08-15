@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:dartz/dartz.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:sonara/core/di/service_locator.dart';
+import 'package:sonara/core/utils/services/directory_paths.dart';
 import 'package:sonara/core/domain/usecase/failure.dart';
 import 'package:sonara/features/playlists/data/models/playlist_model.dart';
 import 'package:sonara/features/playlists/data/models/song_model.dart';
 import 'package:sonara/features/audio/domain/entities/song.dart';
+import 'package:uuid/uuid.dart';
 
 abstract class PlaylistDataSource {
   Future<Either<Failure, PlaylistModel>> createPlaylist(String name);
@@ -27,24 +29,12 @@ abstract class PlaylistDataSource {
 
 class PlaylistDataSourceImpl implements PlaylistDataSource {
   static const String _fileName = 'playlists.json';
-  int _idCounter = 0;
 
   Future<File> _getPlaylistsFile() async {
-    final directory = await getApplicationDocumentsDirectory();
+    final directory = getIt<DirectoryPaths>().applicationDocumentsDirectory;
     final file = File('${directory.path}/$_fileName');
     if (!await file.exists()) {
       await file.writeAsString(jsonEncode([]));
-      _idCounter = 0;
-    } else {
-      final content = await file.readAsString();
-      final playlists = jsonDecode(content) as List<dynamic>;
-      if (playlists.isNotEmpty) {
-        _idCounter =
-            playlists
-                .map((p) => int.tryParse(p['id'] as String) ?? 0)
-                .reduce((a, b) => a > b ? a : b) +
-            1;
-      }
     }
     return file;
   }
@@ -67,8 +57,7 @@ class PlaylistDataSourceImpl implements PlaylistDataSource {
   @override
   Future<Either<Failure, PlaylistModel>> createPlaylist(String name) async {
     try {
-      final id = (_idCounter++).toString();
-      final playlist = PlaylistModel(id: id, name: name);
+      final playlist = PlaylistModel(id: Uuid().v4(), name: name);
       final playlists = await _readPlaylists();
       playlists.add(playlist);
       await _writePlaylists(playlists);
@@ -117,6 +106,19 @@ class PlaylistDataSourceImpl implements PlaylistDataSource {
       final playlists = await _readPlaylists();
       final index = playlists.indexWhere((p) => p.id == playlistId);
       if (index != -1) {
+        final playlistAlreadyHasSong = playlists[index].songs.any(
+          (element) => element.id == song.id,
+        );
+        if (playlistAlreadyHasSong) {
+          return Right(
+            PlaylistModel(
+              id: playlistId,
+              name: playlists[index].name,
+              songs: playlists[index].songs,
+            ),
+          );
+        }
+
         // Convert Song to SongModel to match the expected type in PlaylistModel
         final songModel = SongModel.fromSong(song);
         final updatedSongs = List<Song>.from(playlists[index].songs)
@@ -195,7 +197,7 @@ class PlaylistDataSourceImpl implements PlaylistDataSource {
     try {
       final playlistResult = await getPlaylist(playlistId);
       return playlistResult.fold((failure) => Left(failure), (playlist) async {
-        final directory = await getApplicationDocumentsDirectory();
+        final directory = getIt<DirectoryPaths>().applicationDocumentsDirectory;
         final filePath = '${directory.path}/${playlist.name}.m3u';
         final file = File(filePath);
         final buffer = StringBuffer('#EXTM3U\n');
@@ -225,9 +227,9 @@ class PlaylistDataSourceImpl implements PlaylistDataSource {
       if (lines.isEmpty || lines[0].trim() != '#EXTM3U') {
         return Left(GenericFailure('Invalid M3U format'));
       }
-      final id = (_idCounter++).toString();
+
       final name = filePath.split('/').last.split('.').first;
-      final playlist = PlaylistModel(id: id, name: name);
+      final playlist = PlaylistModel(id: Uuid().v4(), name: name);
       final playlists = await _readPlaylists();
       playlists.add(playlist);
       await _writePlaylists(playlists);

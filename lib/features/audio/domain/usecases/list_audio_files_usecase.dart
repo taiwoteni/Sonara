@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:sonara/core/domain/usecase/failure.dart';
 import 'package:sonara/features/audio/domain/entities/song.dart';
 import 'package:sonara/features/audio/domain/repositories/audio_repository.dart';
 
@@ -9,14 +11,14 @@ class ListAudioFilesUseCase {
   ListAudioFilesUseCase(this._repository);
 
   /// Execute the use case to list audio files
-  Future<List<Song>> execute() async {
+  Future<Either<Failure, List<Song>>> execute() async {
     // First ensure we have permissions
-    bool hasPermission = await _repository.requestPermissions();
-    if (!hasPermission) {
-      return [];
-    }
-
-    // Then list the audio files
-    return _repository.listAudioFiles();
+    final permissionResult = await _repository.requestPermissions();
+    return permissionResult.fold((failure) => Left(failure), (hasPermission) {
+      if (!hasPermission) {
+        return Left(GenericFailure('Permission to access audio files denied'));
+      }
+      return _repository.listAudioFiles();
+    });
   }
 }

@@ -1,13 +1,18 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sonara/core/components/lottie_widget.dart';
+import 'package:sonara/core/utils/colors.dart';
 import 'package:sonara/core/utils/extensions/transforms_extensions.dart';
 import 'package:sonara/core/utils/theme.dart';
 import 'package:sonara/features/audio/domain/entities/song.dart';
+import 'package:sonara/features/songs/data/models/sonara_popup_menu_item.dart';
 
 /// A custom list item widget for displaying songs
 class SongWidget extends StatelessWidget {
@@ -17,34 +22,68 @@ class SongWidget extends StatelessWidget {
   /// Callback when the item is tapped
   final VoidCallback? onTap;
 
+  /// Shows playing animation when the song is currently being played.
+  final bool isPlaying;
+
   /// Callback when the more options button is tapped
-  final VoidCallback? onMoreTap;
+  final List<PopupMenuEntry<String>> Function(Song song)? items;
 
   const SongWidget({
     super.key,
     required this.audio,
     this.onTap,
-    this.onMoreTap,
+    this.items,
+    this.isPlaying = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final menus = items == null ? null : items!(audio);
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
-      color: Colors.transparent,
+      padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 0),
+      decoration: BoxDecoration(
+        color: !isPlaying ? Colors.transparent : Colors.white10,
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: GestureDetector(
         onTap: onTap,
         child: Row(
           children: [
             // Album photo with play icon overlay
-            ClipOval(
-              child: Container(
-                width: 52,
-                height: 52,
-                color: Colors.deepPurple.shade700,
-                child: audio.thumbnailData.isNotEmpty
-                    ? _buildThumbnailImage(audio.thumbnailData, audio.title)
-                    : defaultThumbnailWidget(),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: SizedBox(
+                width: 46,
+                height: 46,
+                child: FutureBuilder<String?>(
+                  future: _getThumbnailPath(audio.id),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData && snapshot.data != null) {
+                      return Image.file(
+                        File(snapshot.data!),
+                        fit: BoxFit.cover,
+                        width: double.maxFinite,
+                        height: double.maxFinite,
+                        errorBuilder: (context, error, stackTrace) {
+                          return audio.thumbnailData.isNotEmpty
+                              ? _buildThumbnailImage(
+                                  audio.thumbnailData,
+                                  audio.title,
+                                )
+                              : defaultThumbnailWidget();
+                        },
+                      );
+                    } else if (audio.thumbnailData.isNotEmpty) {
+                      return _buildThumbnailImage(
+                        audio.thumbnailData,
+                        audio.title,
+                      );
+                    } else {
+                      return defaultThumbnailWidget();
+                    }
+                  },
+                ),
               ),
             ),
 
@@ -58,54 +97,79 @@ class SongWidget extends StatelessWidget {
                 children: [
                   Text(
                     audio.title,
-                    style: context.lufgaSemiBold.copyWith(fontSize: 13),
+                    style: context.lufgaSemiBold.copyWith(fontSize: 10),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Gap(2),
+                  Gap(1),
                   Row(
                     spacing: 7,
                     children: [
-                      Text(
-                        _formatDuration(audio.duration),
-                        style: context.lufgaRegular.copyWith(
-                          color: Colors.white70,
-                          fontSize: 10,
+                      if (isPlaying) ...[
+                        LottieWidget(
+                          src: 'assets/animations/playing_wave.json',
+                          color: Colors.white,
+                          size: Size.square(19),
                         ),
-                      ),
-                      Text(
-                        "•",
-                        style: context.spaceGroteskRegular.copyWith(
-                          color: Colors.white70,
-                          fontSize: 11,
+                        Text(
+                          "Now Playing",
+                          style: context.lufgaSemiBold.copyWith(
+                            color: Colors.white,
+                            fontSize: 9,
+                          ),
                         ),
-                      ),
-                      Flexible(
-                        child: Text(
-                          audio.artist,
+                      ] else ...[
+                        Text(
+                          _formatDuration(audio.duration),
+                          style: context.lufgaMedium.copyWith(
+                            color: Colors.white70,
+                            fontSize: 9,
+                          ),
+                        ),
+                        Text(
+                          "•",
                           style: context.spaceGroteskRegular.copyWith(
                             color: Colors.white70,
-                            fontSize: 10,
+                            fontSize: 11,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
+                        Flexible(
+                          child: Text(
+                            audio.artist,
+                            style: context.lufgaMedium.copyWith(
+                              color: Colors.white70,
+                              fontSize: 9,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ],
               ),
             ),
 
-            // More options icon
-            IconButton(
-              icon: const Icon(
-                IconsaxPlusLinear.more,
-                size: 13,
-                color: Colors.white,
+            if (menus != null && menus.isNotEmpty)
+              PopupMenuButton<String>(
+                // onSelected: onMenuSelected,
+                itemBuilder: (context) => menus,
+                onCanceled: () => log("Popup Menu Closed", name: 'SongWidget'),
+                onOpened: () => log("Popup Menu Opened", name: 'SongWidget'),
+                enabled: true,
+                color: AppColors.greyBackground,
+                position: PopupMenuPosition.under,
+                useRootNavigator: true,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                icon: const Icon(
+                  IconsaxPlusLinear.more,
+                  size: 13,
+                  color: Colors.white,
+                ).rotate(90),
               ),
-              onPressed: onMoreTap,
-            ).rotate(90),
           ],
         ),
       ),
@@ -143,14 +207,26 @@ class SongWidget extends StatelessWidget {
     return Container(
       width: double.maxFinite,
       height: double.maxFinite,
-      color: Colors.deepPurple.shade700,
+      color: AppColors.background_2,
       alignment: Alignment.center,
-      child: Icon(
-        CupertinoIcons.play_arrow_solid,
-        color: Colors.white.withOpacity(0.9),
-        size: 21,
-      ),
+      child: Icon(IconsaxPlusLinear.musicnote, color: Colors.white54, size: 21),
     );
+  }
+
+  /// Helper method to get thumbnail file path if it exists
+  Future<String?> _getThumbnailPath(String songId) async {
+    try {
+      final supportDir = await getApplicationSupportDirectory();
+      final thumbnailPath = '${supportDir.path}/.thumbnails/$songId.jpg';
+      final file = File(thumbnailPath);
+      if (await file.exists()) {
+        return thumbnailPath;
+      }
+      return null;
+    } catch (e) {
+      log('Error getting thumbnail path: $e', name: 'SongWidget');
+      return null;
+    }
   }
 
   /// Helper method to build thumbnail image with robust error handling
@@ -176,5 +252,23 @@ class SongWidget extends StatelessWidget {
       );
       return defaultThumbnailWidget();
     }
+  }
+
+  void onMenuSelected(String value) {
+    final menus = items!(audio);
+
+    final selectedMenu = menus.firstWhereOrNull(
+      (menu) =>
+          menu is SonaraPopupMenuItem &&
+          (menu as SonaraPopupMenuItem).value == value,
+    );
+
+    if (selectedMenu == null || selectedMenu is! SonaraPopupMenuItem<String>) {
+      return;
+    }
+
+    if (selectedMenu.onTap == null) return;
+
+    selectedMenu.onTap!();
   }
 }

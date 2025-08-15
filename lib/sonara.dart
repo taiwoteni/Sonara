@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sonara/core/utils/colors.dart';
 import 'package:sonara/core/utils/theme.dart';
 import 'package:sonara/core/router/router.dart';
 
@@ -173,8 +174,9 @@ class _SonaraState extends State<Sonara> {
       builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light.copyWith(
           statusBarIconBrightness: Brightness.light,
-          statusBarColor: Colors.transparent,
-          systemNavigationBarColor: Colors.transparent,
+          statusBarColor: AppColors.background,
+          statusBarBrightness: Brightness.dark,
+          systemNavigationBarColor: AppColors.background,
           systemNavigationBarIconBrightness: Brightness.light,
         ),
         child: child ?? Placeholder(),

@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
@@ -21,6 +21,8 @@ import 'package:sonara/features/audio/presentation/widgets/thumbnail_background.
 import 'package:sonara/core/di/service_locator.dart';
 import 'package:sonara/core/utils/services/audio_player_helper.dart';
 import 'package:sonara/core/utils/services/audio_service.dart';
+import 'package:sonara/features/songs/presentation/widgets/cd_artwork_widget.dart';
+import 'package:sonara/features/songs/utils/artwork_utils.dart';
 // import 'package:audio_waveforms/audio_waveforms.dart'; // COMMENTED OUT - Waveform functionality removed
 
 class SongScreen extends StatefulWidget {
@@ -32,38 +34,65 @@ class SongScreen extends StatefulWidget {
   State<SongScreen> createState() => _SongScreenState();
 }
 
-class _SongScreenState extends State<SongScreen> {
+class _SongScreenState extends State<SongScreen> with TickerProviderStateMixin {
   late Song song;
-  String _highQualityArtworkData = '';
-  bool _isLoadingArtwork = true;
+  late StreamSubscription currentSongSubscription;
+  String? artworkPath;
   late AudioService audioService;
 
-  // COMMENTED OUT - Waveform related variables
-  // late PlayerController _playerController;
-  // List<double> _waveformData = [];
-  // bool _isWaveformReady = false;
+  late AnimationController rotationController;
+  late Animation<double> rotationAnimation;
+
+  Color dominantColor = AppColors.background_2;
+
+  Color? secondaryColor;
 
   @override
   void initState() {
     song = widget.song;
     audioService = getIt<AudioService>();
-    // _playerController = PlayerController(); // COMMENTED OUT - Waveform controller
     super.initState();
+    rotationController = AnimationController(
+      duration: const Duration(seconds: 25),
+      vsync: this,
+    );
+    rotationAnimation = Tween(begin: 0.0, end: 1.0).animate(rotationController);
     WidgetsFlutterBinding.ensureInitialized().addPostFrameCallback((
       timeStamp,
     ) async {
-      await _loadHighQualityArtwork();
-      _initializeAudio(); // Note: Will not replay song if already playing via mini-player
+      getArtwork(song);
+      initializeAudio();
+      getArtworkColors(song);
+      watchCurrentSong();
     });
   }
 
-  @override
-  void dispose() {
-    // _playerController.dispose(); // COMMENTED OUT - Waveform controller disposal
-    super.dispose();
+  void watchCurrentSong() {
+    currentSongSubscription = audioService.currentSongStream.listen((
+      event,
+    ) async {
+      log("Event received", name: 'SongScreen');
+      if (event == null) return;
+
+      // To prevent re-initializing when the same song is being played.
+      if (event.id == song.id) return;
+
+      if (!mounted) {
+        log("Screen is not mounted", name: 'SongScreen');
+        return;
+      }
+      log('Screen is mounted', name: 'SongScreen');
+
+      // To refetch the new album cover, etc.
+      await getArtwork(event);
+      getArtworkColors(event);
+      setState(() {
+        song = event;
+      });
+    });
   }
 
-  Future<void> _initializeAudio() async {
+  Future<void> initializeAudio() async {
     try {
       // Request notification permission for Android 13 and above
       var status = await Permission.notification.status;
@@ -90,7 +119,7 @@ class _SongScreenState extends State<SongScreen> {
 
       await AudioPlayerHelper.playSong(
         song,
-        highQualityArtworkData: _highQualityArtworkData,
+        // highQualityArtworkData: _highQualityArtworkData,
       );
       // await _extractWaveform(); // COMMENTED OUT - Waveform extraction
     } catch (e) {
@@ -98,71 +127,17 @@ class _SongScreenState extends State<SongScreen> {
     }
   }
 
-  Future<void> _loadHighQualityArtwork() async {
-    try {
-      // First, check if high-quality artwork already exists in application support directory
-      final cacheDir = await getApplicationSupportDirectory();
-      final filePath =
-          '${cacheDir.path}/high_quality_artwork_${widget.song.id}.jpg';
-      final file = File(filePath);
-
-      if (await file.exists()) {
-        log(
-          'Using existing high-quality artwork file: $filePath for ${widget.song.title}',
-          name: 'SongScreen',
-        );
-        // Read the file data to display in UI
-        final fileData = await file.readAsBytes();
-        final base64Data = base64Encode(fileData);
-        setState(() {
-          _highQualityArtworkData = base64Data;
-          _isLoadingArtwork = false;
-        });
-        log(
-          'High-quality artwork loaded from existing file for ${widget.song.title}, Data length: ${base64Data.length}',
-          name: 'SongScreen',
-        );
-        return;
-      }
-
-      // If file doesn't exist, load new artwork data
-      final result = await MethodChannel(
-        'com.sonara.audio_files',
-      ).invokeMethod('getHighQualityArtwork', {'id': widget.song.id});
-      final artworkData = result['artworkData'] ?? '';
-      setState(() {
-        _highQualityArtworkData = artworkData;
-        _isLoadingArtwork = false;
-      });
-      if (artworkData.isNotEmpty) {
-        // Save high-quality artwork to a persistent file
-        final cleanedData = artworkData.replaceAll(RegExp(r'\s+'), '');
-        final decodedData = const Base64Decoder().convert(cleanedData);
-        await file.writeAsBytes(decodedData);
-        log(
-          'High-quality artwork saved to file: $filePath for ${widget.song.title}',
-          name: 'SongScreen',
-        );
-      }
-      log(
-        'High-quality artwork loaded for ${widget.song.title}, Data length: ${artworkData.length}',
-        name: 'SongScreen',
-      );
-    } catch (e) {
-      log(
-        'Error loading high-quality artwork for ${widget.song.title}: $e',
-        name: 'SongScreen',
-      );
-      setState(() {
-        _isLoadingArtwork = false;
-      });
-    }
+  @override
+  void dispose() {
+    currentSongSubscription.cancel();
+    rotationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return ThumbnailBackground(
-      thumbnailData: widget.song.thumbnailData,
+      thumbnailData: artworkPath ?? song.artworkPath,
       padding: context.safeAreaInsets.copyWith(left: 16, right: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -207,54 +182,44 @@ class _SongScreenState extends State<SongScreen> {
           const Spacer(),
 
           // Song Artwork
-          ClipOval(
-            child: Container(
-              width: context.screenSize.width * .76,
-              height: context.screenSize.width * .76,
-              padding: const EdgeInsets.all(3),
-              color: _isLoadingArtwork ? Colors.transparent : Colors.white,
-              child: ClipOval(
-                child: Container(
-                  width: double.maxFinite,
-                  height: double.maxFinite,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: _isLoadingArtwork
-                        ? Colors.transparent
-                        : Colors.deepPurple.shade700,
+          StreamBuilder<bool>(
+            stream: audioService.isPlayingStream,
+            builder: (context, snapshot) {
+              final isPlaying = snapshot.data ?? false;
+              if (isPlaying) {
+                rotationController.repeat();
+              } else {
+                rotationController.stop();
+              }
+              return RotationTransition(
+                turns: rotationAnimation,
+                child: ClipOval(
+                  child: Container(
+                    width: context.screenSize.width * .76,
+                    height: context.screenSize.width * .76,
+                    padding: const EdgeInsets.all(3),
+                    color: Colors.white,
+                    child: CDArtworkWidget(
+                      size: context.screenSize.width * .76,
+                      artworkPath: song.artworkPath,
+                      dominantColor: dominantColor,
+                      secondaryColor: secondaryColor,
+                      song: song,
+                    ),
                   ),
-                  child: _isLoadingArtwork
-                      ? const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        )
-                      : _highQualityArtworkData.isNotEmpty
-                      ? _buildThumbnailImage(
-                          _highQualityArtworkData,
-                          widget.song.title,
-                        )
-                      : widget.song.thumbnailData.isNotEmpty
-                      ? _buildThumbnailImage(
-                          widget.song.thumbnailData,
-                          widget.song.title,
-                        )
-                      : const Icon(
-                          IconsaxPlusBold.headphone,
-                          color: Colors.white,
-                          size: 130,
-                        ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
 
           Gap(24),
           // Song Title
           Text(
-            widget.song.title,
+            song.title,
             overflow: TextOverflow.fade,
             maxLines: 3,
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 21,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -264,7 +229,7 @@ class _SongScreenState extends State<SongScreen> {
           // Song Artist
           Text(
             song.artist,
-            style: const TextStyle(fontSize: 18, color: Colors.white70),
+            style: const TextStyle(fontSize: 15, color: Colors.white70),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -357,6 +322,7 @@ class _SongScreenState extends State<SongScreen> {
 
                     return IconButton(
                       onPressed: () => audioService.shuffle(!shuffle),
+                      iconSize: 19,
                       icon: Icon(
                         IconsaxPlusBold.shuffle,
                         color: shuffle ? Colors.white : Colors.white60,
@@ -364,19 +330,32 @@ class _SongScreenState extends State<SongScreen> {
                     );
                   },
                 ),
-                Icon(IconsaxPlusBold.previous),
+                StreamBuilder<bool>(
+                  stream: audioService.hasPreviousSongStream,
+                  builder: (context, snapshot) {
+                    final hasPrevious = snapshot.data ?? false;
+                    return IconButton(
+                      onPressed: hasPrevious
+                          ? () => audioService.playPrevious()
+                          : () => audioService.seek(Duration.zero),
+                      iconSize: 19,
+                      icon: Icon(IconsaxPlusBold.previous, color: Colors.white),
+                    );
+                  },
+                ),
                 StreamBuilder<bool>(
                   stream: audioService.isPlayingStream,
                   builder: (context, snapshot) {
                     final isPlaying = snapshot.data ?? false;
                     return Container(
-                      width: 60,
-                      height: 60,
+                      width: 55,
+                      height: 55,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
+                        iconSize: 19,
                         icon: Icon(
                           isPlaying
                               ? IconsaxPlusBold.pause
@@ -394,7 +373,20 @@ class _SongScreenState extends State<SongScreen> {
                     );
                   },
                 ),
-                Icon(IconsaxPlusBold.next),
+                StreamBuilder<bool>(
+                  stream: audioService.hasNextSongStream,
+                  builder: (context, snapshot) {
+                    final hasNext = snapshot.data ?? false;
+                    return IconButton(
+                      onPressed: hasNext ? () => audioService.playNext() : null,
+                      iconSize: 19,
+                      icon: Icon(
+                        IconsaxPlusBold.next,
+                        color: hasNext ? Colors.white : Colors.white30,
+                      ),
+                    );
+                  },
+                ),
                 StreamBuilder(
                   stream: audioService.loopStream,
                   builder: (context, snapshot) {
@@ -413,7 +405,7 @@ class _SongScreenState extends State<SongScreen> {
 
                         audioService.loop(LoopMode.off);
                       },
-
+                      iconSize: 19,
                       icon: Icon(
                         loopMode == LoopMode.one
                             ? HugeIcons.strokeRoundedRepeatOne01
@@ -436,37 +428,78 @@ class _SongScreenState extends State<SongScreen> {
     );
   }
 
-  /// Helper method to build thumbnail image with robust error handling
-  Widget _buildThumbnailImage(String thumbnailData, String title) {
-    try {
-      // Clean the base64 string by removing any whitespace or line breaks
-      final cleanedData = thumbnailData.replaceAll(RegExp(r'\s+'), '');
-      // Attempt to decode the cleaned base64 string
+  Future<void> getArtwork(Song song) async {
+    log("Called [getArtwork] method", name: 'SongScreen');
+    // First, check if high-quality artwork already exists in application support directory
+    final cacheDir = await getApplicationSupportDirectory();
+    final thumbnailDir = Directory('${cacheDir.path}/.thumbnails');
+
+    // Create thumbnail directory if it doesn't exist.
+    if (!await thumbnailDir.exists()) {
+      await thumbnailDir.create(recursive: true);
+    }
+    final filePath = '${thumbnailDir.path}/${song.id}.jpg';
+    final file = File(filePath);
+
+    // If the thumbnail file is not yet found, we would fetch and save.
+    if (!await file.exists()) {
+      final result = await MethodChannel(
+        'com.sonara.audio_files',
+      ).invokeMethod('getHighQualityArtwork', {'id': song.id});
+      final artworkData = result['artworkData']?.toString() ?? '';
+
+      if (artworkData.isEmpty) {
+        log('Song does not have an artwork', name: 'SongScreen');
+        setState(() => artworkPath = null);
+        return;
+      }
+
+      // Save high-quality artwork to a persistent file in /.thumbnails directory
+      final cleanedData = artworkData.replaceAll(RegExp(r'\s+'), '');
       final decodedData = const Base64Decoder().convert(cleanedData);
-      return Image.memory(
-        decodedData,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          log(
-            'Error rendering thumbnail for $title: $error',
-            error: error,
-            name: 'SongScreen',
-          );
-          if (stackTrace != null) {
-            log('Stack trace: $stackTrace');
-          }
-          return const Icon(Icons.album, color: AppColors.purple, size: 150);
-        },
-      );
-    } catch (e, stackTrace) {
+      await file.writeAsBytes(decodedData);
       log(
-        'Exception decoding base64 for $title: $e',
-        error: e,
+        'High-quality artwork saved to file: $filePath for ${widget.song.title}',
         name: 'SongScreen',
       );
-      log('Stack trace: $stackTrace', error: e, name: 'SongScreen');
-      return const Icon(Icons.album, color: AppColors.purple, size: 150);
+      log(
+        'High-quality artwork saved & loaded for ${widget.song.title}, Data length: ${artworkData.length}',
+        name: 'SongScreen',
+      );
+
+      setState(() => artworkPath = filePath);
+      return;
     }
+
+    log(
+      'Using existing high-quality artwork file: $filePath for ${widget.song.title}',
+      name: 'SongScreen',
+    );
+    setState(() => artworkPath = filePath);
+    return;
+  }
+
+  Future<void> getArtworkColors(Song song) async {
+    if (File(song.artworkPath).existsSync()) {
+      final colors = await ArtworkUtils.getDominantGradientColorsFromArtwork(
+        song.artworkPath,
+      );
+      final color = await ArtworkUtils.getDominantColorFromArtwork(
+        song.artworkPath,
+      );
+      if (mounted) {
+        setState(() {
+          dominantColor = color;
+          secondaryColor = colors.last;
+        });
+      }
+
+      return;
+    }
+    setState(() {
+      dominantColor = AppColors.background_2;
+      secondaryColor = null;
+    });
   }
 
   String formatDuration(int duration) {
@@ -493,131 +526,3 @@ class _SongScreenState extends State<SongScreen> {
     }
   }
 }
-
-// ============================================================================
-// COMMENTED OUT AUDIO WAVEFORM FUNCTIONALITY
-// ============================================================================
-// The following code was previously used for audio waveform visualization
-// It has been commented out and organized here for potential future use
-// ============================================================================
-
-/*
-// WAVEFORM EXTRACTION METHOD
-Future<void> _extractWaveform() async {
-  try {
-    await _playerController.preparePlayer(
-      path: song.path,
-      shouldExtractWaveform: true,
-    );
-
-    // Wait for waveform extraction to complete
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    // Get the extracted waveform data
-    final waveformData = _playerController.waveformData;
-
-    if (waveformData.isNotEmpty) {
-      setState(() {
-        _waveformData = waveformData;
-        _isWaveformReady = true;
-      });
-      log(
-        'Waveform extracted successfully: ${waveformData.length} points',
-        name: 'SongScreen',
-      );
-    } else {
-      log(
-        'Waveform extraction failed or returned empty data',
-        name: 'SongScreen',
-      );
-      // Generate fallback waveform data
-      _generateFallbackWaveform();
-    }
-
-    // Sync player controller with audio service position
-    _syncPlayerPosition();
-  } catch (e) {
-    log('Error extracting waveform: $e', name: 'SongScreen');
-    _generateFallbackWaveform();
-  }
-}
-
-// FALLBACK WAVEFORM GENERATION METHOD
-void _generateFallbackWaveform() {
-  // Generate a simple waveform pattern as fallback
-  final fallbackData = List.generate(100, (index) {
-    return (0.3 + (0.7 * (index % 10) / 10)) *
-        (1 + 0.5 * (index % 3 == 0 ? 1 : 0));
-  });
-
-  setState(() {
-    _waveformData = fallbackData;
-    _isWaveformReady = true;
-  });
-  log('Generated fallback waveform data', name: 'SongScreen');
-}
-
-// PLAYER POSITION SYNCHRONIZATION METHOD
-void _syncPlayerPosition() {
-  // Listen to audio service position and update player controller
-  _audioService.positionStream.listen((position) {
-    if (_playerController.playerState == PlayerState.initialized ||
-        _playerController.playerState == PlayerState.playing ||
-        _playerController.playerState == PlayerState.paused) {
-      _playerController.seekTo(position.inMilliseconds);
-    }
-  });
-}
-
-// WAVEFORM WIDGET IMPLEMENTATION
-AudioFileWaveforms(
-  size: Size(double.maxFinite, 40),
-  playerController: _playerController,
-  enableSeekGesture: true,
-  waveformType: WaveformType.fitWidth,
-  waveformData: _waveformData,
-  continuousWaveform: false,
-  padding: EdgeInsets.zero,
-  margin: EdgeInsets.zero,
-  animationCurve: Curves.ease,
-  playerWaveStyle: const PlayerWaveStyle(
-    scaleFactor: 30,
-    spacing: 8,
-    waveThickness: 3,
-    showSeekLine: true,
-    seekLineColor: Colors.white,
-    seekLineThickness: 2,
-    fixedWaveColor: Colors.white54,
-    liveWaveColor: Colors.white,
-  ),
-)
-
-// WAVEFORM LOADING STATE WIDGET
-Container(
-  height: 40,
-  alignment: Alignment.center,
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      SizedBox(
-        width: 20,
-        height: 20,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: const AlwaysStoppedAnimation<Color>(
-            Colors.white54,
-          ),
-        ),
-      ),
-      const SizedBox(width: 12),
-      Text(
-        'Loading waveform...',
-        style: const TextStyle(
-          color: Colors.white54,
-          fontSize: 12,
-        ),
-      ),
-    ],
-  ),
-)
-*/

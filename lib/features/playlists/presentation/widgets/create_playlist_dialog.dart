@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:gap/gap.dart';
 import 'package:sonara/core/utils/colors.dart';
 import 'package:sonara/core/utils/theme.dart';
@@ -29,7 +30,7 @@ class _CreatePlaylistDialogState extends State<CreatePlaylistDialog> {
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
-        color: AppColors.greyBackground,
+        color: AppColors.background_2,
         borderRadius: BorderRadius.circular(12.0),
       ),
       child: Column(
@@ -37,11 +38,10 @@ class _CreatePlaylistDialogState extends State<CreatePlaylistDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Create New Playlist',
-            style: context.lufgaBold.copyWith(
+            'New Playlist',
+            style: context.spaceGroteskBold.copyWith(
               color: Colors.white,
               fontSize: 20.0,
-              fontWeight: FontWeight.bold,
             ),
           ),
           Gap(10),
@@ -58,7 +58,7 @@ class _CreatePlaylistDialogState extends State<CreatePlaylistDialog> {
                 color: Colors.white54,
               ),
               filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.09),
+              fillColor: Colors.white.withValues(alpha: 0.03),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8.0),
                 borderSide: BorderSide.none,
@@ -100,18 +100,21 @@ class _CreatePlaylistDialogState extends State<CreatePlaylistDialog> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.purple,
+                  backgroundColor: Colors.white,
+                  enableFeedback: true,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                 ),
-                child: Text(
-                  isLoading ? 'Loading...' : 'Create',
-                  style: context.lufgaSemiBold.copyWith(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                ),
+                child: isLoading
+                    ? SpinKitFadingFour(color: Colors.black, size: 16)
+                    : Text(
+                        'Create',
+                        style: context.lufgaSemiBold.copyWith(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
               ),
             ],
           ),

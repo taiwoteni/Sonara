@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonara/core/utils/colors.dart';
@@ -41,15 +42,14 @@ class _AddSongToPlaylistDialogState
         children: [
           Text(
             'Add To Playlist',
-            style: context.lufgaBold.copyWith(
+            style: context.spaceGroteskBold.copyWith(
               color: Colors.white,
               fontSize: 20.0,
-              fontWeight: FontWeight.bold,
             ),
           ),
           Gap(10),
           const Text(
-            "Select the playlists you'll like to add the song to",
+            "Select the playlists you'll like to add this song to",
             style: TextStyle(color: Colors.white70, fontSize: 14.0),
           ),
           Gap(20.0),
@@ -66,10 +66,10 @@ class _AddSongToPlaylistDialogState
                 checked: selectedIds.contains(playlist.id),
                 onChecked: (value) => setState(() {
                   if (value) {
-                    selectedIds.add(playlist.id);
+                    setState(() => selectedIds.add(playlist.id));
                     return;
                   }
-                  selectedIds.remove(playlist.id);
+                  setState(() => selectedIds.remove(playlist.id));
                 }),
               );
             },
@@ -97,6 +97,7 @@ class _AddSongToPlaylistDialogState
               ElevatedButton(
                 onPressed: () async {
                   setState(() => isLoading = true);
+                  await Future.delayed(Durations.extralong4 * (2));
 
                   for (final id in selectedIds) {
                     await playlistsNotifier.addSongToPlaylist(id, widget.song);
@@ -104,18 +105,20 @@ class _AddSongToPlaylistDialogState
                   context.pop();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.purple,
+                  backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                 ),
-                child: Text(
-                  isLoading ? 'Loading...' : 'Confirm',
-                  style: context.lufgaSemiBold.copyWith(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                ),
+                child: isLoading
+                    ? SpinKitFadingFour(color: Colors.black, size: 16)
+                    : Text(
+                        'Confirm',
+                        style: context.lufgaSemiBold.copyWith(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                      ),
               ),
             ],
           ),

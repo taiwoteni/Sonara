@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sonara/core/utils/colors.dart';
 import 'package:sonara/core/utils/theme.dart';
 import 'package:sonara/core/utils/types.dart';
 import 'package:sonara/features/playlists/domain/entities/playlist.dart';
@@ -24,7 +23,8 @@ class SelectPlaylistWidget extends StatelessWidget {
         children: [
           Checkbox(
             value: checked,
-            activeColor: AppColors.purple,
+            activeColor: Colors.white,
+            checkColor: Colors.black,
             side: BorderSide(color: Colors.white24),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             onChanged: (value) => onChecked(value ?? false),

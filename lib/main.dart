@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:sonara/core/di/service_locator.dart';
+import 'package:sonara/core/utils/colors.dart';
+import 'package:sonara/core/utils/services/directory_paths.dart';
 import 'package:sonara/sonara.dart';
 
 void main() async {
@@ -14,7 +16,9 @@ void main() async {
     androidNotificationChannelName: 'Sonara Music',
     preloadArtwork: true,
     androidNotificationIcon: 'drawable/sonara_white',
-    // notificationColor: AppColors.purple,
+    rewindInterval: const Duration(seconds: 15),
+    fastForwardInterval: const Duration(seconds: 15),
+    notificationColor: AppColors.background,
     androidNotificationOngoing: true,
   );
 
@@ -23,6 +27,9 @@ void main() async {
 
   // Initialize dependency injection
   setupDependencies();
+
+  // Initialize DirectoryPaths during app startup
+  await getIt<DirectoryPaths>().initialize();
 
   runApp(ProviderScope(child: Sonara.instance));
 }

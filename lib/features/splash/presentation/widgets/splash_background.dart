@@ -277,7 +277,7 @@ class _SplashBackgroundState extends State<SplashBackground> {
     return [
       // Circle 1
       Positioned(
-        bottom: context.screenSize.height * 0.1,
+        top: context.screenSize.height * 0.1,
         right: context.screenSize.width * -0.1,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
@@ -299,9 +299,55 @@ class _SplashBackgroundState extends State<SplashBackground> {
         ),
       ),
 
+      Positioned(
+        bottom: context.screenSize.height * 0.2,
+        left: context.screenSize.width * -0.1,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          child: Container(
+            width: context.screenSize.width * 0.5,
+            height: context.screenSize.height * 0.5,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.purple_2.withOpacity(0.0),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.purple_2.withOpacity(0.2),
+                  blurRadius: 80,
+                  spreadRadius: 50,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+
+      Positioned(
+        bottom: context.screenSize.height * 0.2,
+        right: context.screenSize.width * -0.1,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          child: Container(
+            width: context.screenSize.width * 0.5,
+            height: context.screenSize.height * 0.5,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.purple_2.withOpacity(0.0),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.purple_2.withOpacity(0.2),
+                  blurRadius: 80,
+                  spreadRadius: 50,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+
       // Circle 2
       Positioned(
-        bottom: context.screenSize.height * 0.1,
+        top: context.screenSize.height * 0.1,
         left: context.screenSize.width * -0.2,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
@@ -325,7 +371,7 @@ class _SplashBackgroundState extends State<SplashBackground> {
 
       // Circle 3
       Positioned(
-        bottom: context.screenSize.height * .01,
+        top: context.screenSize.height * .01,
         left: context.screenSize.width * .2,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 10.0),
@@ -349,7 +395,7 @@ class _SplashBackgroundState extends State<SplashBackground> {
 
       // Circle 4
       Positioned(
-        top: context.screenSize.height * .01,
+        bottom: context.screenSize.height * .01,
         left: context.screenSize.width * .1,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 10.0),
@@ -363,6 +409,29 @@ class _SplashBackgroundState extends State<SplashBackground> {
               boxShadow: [
                 BoxShadow(
                   color: Colors.purple.shade800.withOpacity(0.1),
+                  blurRadius: 100,
+                  spreadRadius: 70,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+
+      Positioned(
+        bottom: context.screenSize.height * .05,
+        right: context.screenSize.width * .2,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 10.0),
+          child: Container(
+            width: context.screenSize.width * 0.5,
+            height: context.screenSize.height * 0.3,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.pink.withOpacity(0.0),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.pink.withOpacity(0.15),
                   blurRadius: 100,
                   spreadRadius: 70,
                 ),

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:sonara/core/di/service_locator.dart';
 import 'package:sonara/core/utils/services/audio_service.dart';
+import 'package:sonara/core/utils/services/directory_paths.dart';
 import 'package:sonara/features/audio/domain/entities/song.dart';
 import 'dart:developer';
 
@@ -11,13 +11,17 @@ class AudioPlayerHelper {
   static Future<void> playSong(
     Song song, {
     String? highQualityArtworkData,
+    List<Song>? allSongs,
   }) async {
     try {
       String? albumArtPath;
       // First, check for persistent high-quality artwork in application support directory
-      final supportDir = await getApplicationSupportDirectory();
-      final persistentFilePath =
-          '${supportDir.path}/high_quality_artwork_${song.id}.jpg';
+      final supportDir = getIt<DirectoryPaths>().applicationSupportDirectory;
+      final thumbnailDir = Directory('${supportDir.path}/.thumbnails');
+      if (!await thumbnailDir.exists()) {
+        await thumbnailDir.create(recursive: true);
+      }
+      final persistentFilePath = '${thumbnailDir.path}/${song.id}.jpg';
       final persistentFile = File(persistentFilePath);
       if (await persistentFile.exists()) {
         albumArtPath = persistentFilePath;
@@ -29,7 +33,7 @@ class AudioPlayerHelper {
         // Fall back to saving provided data to application support directory
         if (highQualityArtworkData != null &&
             highQualityArtworkData.isNotEmpty) {
-          albumArtPath = await _saveThumbnailToSupportDir(
+          albumArtPath = await saveThumbnailToDir(
             highQualityArtworkData,
             song.id,
           );
@@ -38,10 +42,7 @@ class AudioPlayerHelper {
             name: 'AudioPlayerHelper',
           );
         } else if (song.thumbnailData.isNotEmpty) {
-          albumArtPath = await _saveThumbnailToSupportDir(
-            song.thumbnailData,
-            song.id,
-          );
+          albumArtPath = await saveThumbnailToDir(song.thumbnailData, song.id);
           log(
             'Using saved low-quality thumbnail in support directory for notifications',
             name: 'AudioPlayerHelper',
@@ -56,6 +57,7 @@ class AudioPlayerHelper {
         artist: song.artist,
         albumArtPath: albumArtPath,
         song: song,
+        allSongs: allSongs,
       );
       log(
         'Song playback started: ${song.title}, ID: ${song.id}',
@@ -66,14 +68,19 @@ class AudioPlayerHelper {
     }
   }
 
-  static Future<String?> _saveThumbnailToSupportDir(
+  /// Saves a thumbnail to the thumbnails subdirectory in application support directory.
+  static Future<String?> saveThumbnailToDir(
     String thumbnailData,
     String songId,
   ) async {
     try {
-      // Get the application support directory
-      final supportDir = await getApplicationSupportDirectory();
-      final filePath = '${supportDir.path}/high_quality_artwork_$songId.jpg';
+      // Get the application support directory using singleton
+      final supportDir = getIt<DirectoryPaths>().applicationSupportDirectory;
+      final thumbnailDir = Directory('${supportDir.path}/.thumbnails');
+      if (!(await thumbnailDir.exists())) {
+        await thumbnailDir.create(recursive: true);
+      }
+      final filePath = '${thumbnailDir.path}/$songId.jpg';
 
       // Clean the base64 string
       final cleanedData = thumbnailData.replaceAll(RegExp(r'\s+'), '');
@@ -95,6 +102,61 @@ class AudioPlayerHelper {
         name: 'AudioPlayerHelper',
       );
       return null;
+    }
+  }
+
+  /// Plays a playlist starting from the specified index.
+  static Future<void> playPlaylist(
+    List<Song> songs,
+    String playlistId,
+    int startIndex, {
+    String? highQualityArtworkData,
+  }) async {
+    try {
+      if (songs.isEmpty || startIndex < 0 || startIndex >= songs.length) {
+        log('Invalid playlist or start index', name: 'AudioPlayerHelper');
+        return;
+      }
+      await getIt<AudioService>().playPlaylist(songs, playlistId, startIndex);
+      log(
+        'Playlist playback started with ${songs.length} songs from index $startIndex',
+        name: 'AudioPlayerHelper',
+      );
+    } catch (e) {
+      log('Error playing playlist: $e', name: 'AudioPlayerHelper');
+    }
+  }
+
+  /// Adds a song to the current queue.
+  static Future<void> addToQueue(Song song) async {
+    try {
+      await getIt<AudioService>().addToQueue(song);
+      log(
+        'Song added to queue: ${song.title}, ID: ${song.id}',
+        name: 'AudioPlayerHelper',
+      );
+    } catch (e) {
+      log('Error adding song to queue: $e', name: 'AudioPlayerHelper');
+    }
+  }
+
+  /// Plays the next song in the queue.
+  static Future<void> playNext() async {
+    try {
+      await getIt<AudioService>().playNext();
+      log('Playing next song in queue', name: 'AudioPlayerHelper');
+    } catch (e) {
+      log('Error playing next song: $e', name: 'AudioPlayerHelper');
+    }
+  }
+
+  /// Plays the previous song in the queue.
+  static Future<void> playPrevious() async {
+    try {
+      await getIt<AudioService>().playPrevious();
+      log('Playing previous song in queue', name: 'AudioPlayerHelper');
+    } catch (e) {
+      log('Error playing previous song: $e', name: 'AudioPlayerHelper');
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:sonara/core/utils/services/audio_service.dart';
+import 'package:sonara/core/utils/services/directory_paths.dart';
 import 'package:sonara/core/utils/services/song_service.dart';
 import 'package:sonara/features/audio/data/datasources/audio_data_source.dart';
 import 'package:sonara/features/audio/data/datasources/audio_data_source_impl.dart';
@@ -14,6 +15,7 @@ import 'package:sonara/features/playlists/domain/usecases/create_playlist.dart';
 import 'package:sonara/features/playlists/domain/usecases/delete_playlist.dart';
 import 'package:sonara/features/playlists/domain/usecases/export_playlist.dart';
 import 'package:sonara/features/playlists/domain/usecases/get_playlists.dart';
+import 'package:sonara/features/audio/data/datasources/song_data_source.dart';
 import 'package:sonara/features/playlists/domain/usecases/import_playlist.dart';
 import 'package:sonara/features/playlists/domain/usecases/remove_song_from_playlist.dart';
 import 'package:sonara/features/playlists/domain/usecases/update_playlist.dart';
@@ -26,6 +28,7 @@ void setupDependencies() {
   // Register services
   getIt.registerLazySingleton<SongService>(() => SongService());
   getIt.registerLazySingleton<AudioService>(() => AudioService());
+  getIt.registerLazySingleton<DirectoryPaths>(() => DirectoryPaths());
 
   // Register data sources
   getIt.registerLazySingleton<AudioDataSource>(
@@ -34,7 +37,8 @@ void setupDependencies() {
 
   // Register repositories
   getIt.registerLazySingleton<AudioRepository>(
-    () => AudioRepositoryImpl(getIt<AudioDataSource>()),
+    () =>
+        AudioRepositoryImpl(getIt<AudioDataSource>(), getIt<SongDataSource>()),
   );
 
   // Register use cases
@@ -77,4 +81,7 @@ void setupDependencies() {
   getIt.registerLazySingleton<ImportPlaylist>(
     () => ImportPlaylist(getIt<PlaylistRepository>()),
   );
+
+  // Register song data source
+  getIt.registerLazySingleton<SongDataSource>(() => SongDataSourceImpl());
 }

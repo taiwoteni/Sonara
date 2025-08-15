@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonara/core/utils/extensions/device_query_extensions.dart';
+import 'package:sonara/core/utils/theme.dart';
 import 'package:sonara/features/onboarding/data/datasources/onboarding_items_datasource.dart';
-import 'package:sonara/features/splash/presentation/widgets/splash_background.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -24,7 +24,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SplashBackground(
+    return Scaffold(
+      backgroundColor: Color(0xFF02010A),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: _currentPage == onboardingItems.length - 1
           ? Padding(
@@ -42,7 +43,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             )
           : null,
-      child: SafeArea(
+      body: SafeArea(
         child: Column(
           children: [
             Expanded(
@@ -70,7 +71,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const SizedBox(height: 20),
                       Text(
                         item.title,
-                        style: const TextStyle(
+                        style: context.spaceGroteskMedium.copyWith(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,

@@ -11,7 +11,10 @@ extension DeviceQueryExtensions on BuildContext {
   double get keyboardBottomInsets => _mediaQuery.viewInsets.bottom;
 
   /// Returns the top padding, typically corresponding to the status bar height.
-  double get statusBarPadding => _mediaQuery.padding.top;
+  double get statusBarPadding => _mediaQuery.viewPadding.top;
+
+  /// Returns the bottom padding, typically corresponding to the system's notch or navigator padding.
+  double get systemNavPadding => _mediaQuery.viewPadding.bottom;
 
   /// Returns an [EdgeInsets] with top padding from the status bar and bottom padding from the keyboard.
   EdgeInsets get safeAreaInsets =>

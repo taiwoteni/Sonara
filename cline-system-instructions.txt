@@ -10,13 +10,21 @@ You have no write or permission to make any subtraction in those files. And DON'
 
 I've implemented song listing using Method Channels.
 I also implemented features to store high quality thumbnails in application support directory.
+While songs are being loaded and initialized in the splash screen, their thumbnails are being saved to the app's support directory.
+
 
 When a song is clicked, a mini player appears first and a music notification is posted.
 When the mini player is clicked, user is directed to a song screen.
 
 I've added song searchning (filtering).
 
-Now I'm on the verge of fully integrating playlist features.
-I've integrated local playlist as well as their caching and dummy data but we're making use of real playlist implementation.
-You suggested using the hybrid approach.
-In your words:
+I've integrated playlist features using a hybrid approach.
+
+Check the logic and architecture for creating, exporting and importing playlists.
+Check the logic and architecture of loading songs, playlists & thumbnails (artworks).
+Check the logic and architecture of playing songs, as well as displaying notifications of those songs.
+Check the logic and architecture of the mini player.
+
+
+Check all the code files to understand the current state and mechanism used in the app.
+While suggesting code changes in PLAN mode, show the code sample's as well

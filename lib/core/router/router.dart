@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sonara/features/ai/presentation/views/ai_page.dart';
 import 'package:sonara/features/playlists/domain/entities/playlist.dart';
+import 'package:sonara/features/playlists/presentation/views/add_to_playlist_screen.dart';
 import 'package:sonara/features/playlists/presentation/views/playlist_screen.dart';
+import 'package:sonara/features/playlists/presentation/widgets/fade_transition_page.dart';
 import 'package:sonara/features/songs/presentation/widgets/songs_list.dart';
 import 'package:sonara/features/home/presentation/views/home_screen.dart';
 import 'package:sonara/features/splash/presentation/views/splash_screen.dart';
@@ -52,8 +54,12 @@ final GoRouter router = GoRouter(
         GoRoute(
           name: 'songs',
           path: '/home/songs',
-          pageBuilder: (context, state) =>
-              NoTransitionPage(child: const SongsPage()),
+          pageBuilder: (context, state) => NoTransitionPage(
+            child: Material(
+              color: Colors.transparent,
+              child: const SongsPage(),
+            ),
+          ),
         ),
         GoRoute(
           name: 'ai',
@@ -62,12 +68,24 @@ final GoRouter router = GoRouter(
               NoTransitionPage(child: const AIPage()),
         ),
 
+        // Playlist Routes
         GoRoute(
           name: 'playlists',
           path: '/home/playlists',
           pageBuilder: (context, state) =>
               NoTransitionPage(child: const PlaylistsPage()),
+          routes: [
+            GoRoute(
+              path: ':playlistId',
+              pageBuilder: (context, state) {
+                return FadeTransitionPage(
+                  screen: PlaylistScreen(playlist: state.extra as Playlist),
+                );
+              },
+            ),
+          ],
         ),
+
         GoRoute(
           name: 'settings',
           path: '/home/settings',
@@ -87,6 +105,14 @@ final GoRouter router = GoRouter(
     ),
 
     GoRoute(
+      name: 'addToPlaylists',
+      path: '/addToPlaylists',
+      builder: (context, state) {
+        return AddToPlaylistScreen(song: state.extra as Song);
+      },
+    ),
+
+    GoRoute(
       path: '/audio',
       builder: (BuildContext context, GoRouterState state) {
         return const SongsList();
@@ -97,13 +123,6 @@ final GoRouter router = GoRouter(
       builder: (BuildContext context, GoRouterState state) {
         final Song song = state.extra as Song;
         return SongScreen(song: song);
-      },
-    ),
-
-    GoRoute(
-      path: '/playlist/:playlistId',
-      builder: (context, state) {
-        return PlaylistScreen(playlist: state.extra as Playlist);
       },
     ),
   ],

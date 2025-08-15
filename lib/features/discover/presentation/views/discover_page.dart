@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:sonara/core/utils/extensions/device_query_extensions.dart';
-import 'package:sonara/features/home/presentation/widgets/search_bar.dart';
+import 'package:sonara/core/utils/theme.dart';
 
 class DiscoverPage extends ConsumerStatefulWidget {
   const DiscoverPage({super.key});
@@ -18,8 +19,21 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
       padding: context.safeAreaInsets.copyWith(left: 16, right: 16),
       child: Column(
         children: [
-          Gap(12),
-          SonaraSearchBar(hintText: 'Search for song/playlist...'),
+          Gap(14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Discover".toUpperCase(),
+                style: context.lufgaExtraBold.copyWith(fontSize: 25),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: Icon(IconsaxPlusLinear.search_normal),
+              ),
+            ],
+          ),
+          Gap(16),
         ],
       ),
     );

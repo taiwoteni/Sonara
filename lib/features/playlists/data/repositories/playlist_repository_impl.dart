@@ -34,17 +34,36 @@ class PlaylistRepositoryImpl implements PlaylistRepository {
     String playlistId,
     String songId,
   ) async {
-    // In a real app, fetch the Song entity by songId from a data source
-    // For simplicity, create a dummy Song and convert to SongModel if needed
-    final song = Song(
-      id: songId,
-      title: 'Song $songId',
-      artist: 'Artist',
-      album: 'Album',
-      duration: 0,
-      path: '',
+    try {
+      // Fetch the actual Song entity by songId from a data source
+      // This should be replaced with actual data fetching logic
+      // For now, we'll assume a method to get the song from a song repository
+      // If you have a SongRepository, use it here
+      final songResult = await _getSongById(songId);
+      return songResult.fold(
+        (failure) => Left(failure),
+        (song) => dataSource.addSongToPlaylist(playlistId, song),
+      );
+    } catch (e) {
+      return Left(GenericFailure('Failed to add song to playlist: $e'));
+    }
+  }
+
+  // Placeholder method to fetch a song by ID
+  // Replace this with actual implementation using a SongRepository or similar
+  Future<Either<Failure, Song>> _getSongById(String songId) async {
+    // Dummy implementation for now
+    // In a real app, this would fetch from a data source
+    return Right(
+      Song(
+        id: songId,
+        title: 'Song $songId',
+        artist: 'Artist',
+        album: 'Album',
+        duration: 0,
+        path: '',
+      ),
     );
-    return await dataSource.addSongToPlaylist(playlistId, song);
   }
 
   @override

@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:sonara/core/utils/colors.dart';
@@ -27,10 +27,18 @@ class _ThumbnailBackgroundState extends State<ThumbnailBackground> {
   @override
   void initState() {
     super.initState();
-    _extractDominantColors();
+  }
+
+  @override
+  void setState(ui.VoidCallback fn) {
+    if (!mounted) return;
+
+    super.setState(fn);
   }
 
   Future<void> _extractDominantColors() async {
+    if (!mounted) return;
+
     if (widget.thumbnailData.isEmpty) {
       setState(() {
         _isLoading = false;
@@ -39,10 +47,8 @@ class _ThumbnailBackgroundState extends State<ThumbnailBackground> {
     }
 
     try {
-      // Clean the base64 string by removing any whitespace or line breaks
-      final cleanedData = widget.thumbnailData.replaceAll(RegExp(r'\s+'), '');
-      // Decode the base64 string to bytes
-      final imageBytes = const Base64Decoder().convert(cleanedData);
+      // Decode the file to bytes
+      final imageBytes = await File(widget.thumbnailData).readAsBytes();
       // Load the image for color extraction
       final codec = await ui.instantiateImageCodec(imageBytes);
       final frame = await codec.getNextFrame();
@@ -163,6 +169,8 @@ class _ThumbnailBackgroundState extends State<ThumbnailBackground> {
       print('Error extracting dominant colors: $e');
       print('Stack trace: $stackTrace');
       setState(() {
+        _primaryColor = AppColors.background_2;
+        _secondaryColor = AppColors.background_2;
         _isLoading = false;
       });
     } finally {
@@ -176,6 +184,7 @@ class _ThumbnailBackgroundState extends State<ThumbnailBackground> {
 
   @override
   Widget build(BuildContext context) {
+    _extractDominantColors();
     return Scaffold(
       backgroundColor: AppColors.background,
       // floatingActionButton: widget.floatingActionButton,
@@ -203,7 +212,7 @@ class _ThumbnailBackgroundState extends State<ThumbnailBackground> {
                               _primaryColor.withOpacity(0.5),
                             ],
                             stops: const [
-                              0.7,
+                              0.4,
                               1.0,
                             ], // More weight to primary color at bottom as per user preference
                           ),
@@ -215,7 +224,7 @@ class _ThumbnailBackgroundState extends State<ThumbnailBackground> {
             Positioned.fill(
               child: BackdropFilter(
                 filter: ui.ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                child: Container(color: Colors.black.withOpacity(0.25)),
+                child: Container(color: Colors.black.withOpacity(0.15)),
               ),
             ),
             // Child widget on top of the background

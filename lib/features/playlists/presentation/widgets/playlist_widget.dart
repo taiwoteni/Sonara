@@ -1,41 +1,65 @@
-import 'dart:convert';
 import 'dart:developer';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:sonara/core/utils/colors.dart';
 import 'package:sonara/core/utils/extensions/transforms_extensions.dart';
 import 'package:sonara/core/utils/theme.dart';
+import 'package:sonara/core/utils/types.dart';
 import 'package:sonara/features/playlists/domain/entities/playlist.dart';
+import 'package:sonara/features/songs/utils/artwork_utils.dart';
 
 class PlaylistWidget extends StatelessWidget {
   final Playlist playlist;
   final VoidCallback? onTap;
+  final BoolCallback? onToggle;
+  final bool selected;
 
-  const PlaylistWidget({super.key, required this.playlist, this.onTap});
+  /// Callback when the more options button is tapped
+  final List<PopupMenuEntry<String>> Function(Playlist playlist)? items;
+
+  const PlaylistWidget({
+    super.key,
+    required this.playlist,
+    this.items,
+    this.onTap,
+    this.onToggle,
+    this.selected = false,
+  });
+
+  factory PlaylistWidget.selectable({
+    required final Playlist playlist,
+    required final BoolCallback onToggle,
+    required final bool selected,
+  }) => PlaylistWidget(
+    playlist: playlist,
+    selected: selected,
+    onToggle: onToggle,
+  );
 
   @override
   Widget build(BuildContext context) {
+    final menus = items == null ? null : items!(playlist);
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
+      padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 0),
       color: Colors.transparent,
       child: GestureDetector(
-        onTap: onTap,
+        onTap: onToggle != null ? () => onToggle!(!selected) : onTap,
         child: Row(
           children: [
             // Album photo with play icon overlay
-            ClipOval(
-              child: Container(
-                width: 52,
-                height: 52,
-                color: Colors.black.withValues(alpha: 0.3),
-                child: playlist.thumbnailData.isNotEmpty
-                    ? _buildThumbnailImage(
-                        playlist.thumbnailData,
-                        playlist.name,
-                      )
-                    : defaultThumbnailWidget(),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: SizedBox(
+                width: 55,
+                height: 55,
+                child: FutureBuilder(
+                  future: ArtworkUtils.collage(playlist: playlist),
+                  builder: (context, snapshot) => snapshot.hasData
+                      ? snapshot.data!
+                      : ArtworkUtils.defaultPlaylistArtworkWidget(),
+                ),
               ),
             ),
 
@@ -49,16 +73,16 @@ class PlaylistWidget extends StatelessWidget {
                 children: [
                   Text(
                     playlist.name,
-                    style: context.lufgaSemiBold.copyWith(fontSize: 13),
+                    style: context.lufgaSemiBold.copyWith(fontSize: 14),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Gap(2),
+                  Gap(1),
                   Text(
-                    '${playlist.songs.length} songs',
+                    '${playlist.songs.length} track${playlist.songs.length == 1 ? '' : 's'}',
                     style: context.spaceGroteskRegular.copyWith(
                       color: Colors.white70,
-                      fontSize: 10,
+                      fontSize: 12,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -68,56 +92,39 @@ class PlaylistWidget extends StatelessWidget {
             ),
 
             // More options icon
-            IconButton(
-              icon: const Icon(
-                IconsaxPlusLinear.more,
-                size: 13,
-                color: Colors.white,
+            if (onToggle == null) ...[
+              if (menus != null && menus.isNotEmpty)
+                PopupMenuButton<String>(
+                  // onSelected: onMenuSelected,
+                  itemBuilder: (context) => menus,
+                  onCanceled: () =>
+                      log("Popup Menu Closed", name: 'PlaylistWidget'),
+                  onOpened: () =>
+                      log("Popup Menu Opened", name: 'PlaylistWidget'),
+                  enabled: true,
+                  color: AppColors.greyBackground,
+                  position: PopupMenuPosition.under,
+                  useRootNavigator: true,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  icon: const Icon(
+                    IconsaxPlusLinear.more,
+                    size: 13,
+                    color: Colors.white,
+                  ).rotate(90),
+                ),
+            ] else
+              Radio<bool>(
+                value: selected,
+                groupValue: true,
+                onChanged: (value) => onToggle!(value ?? false),
+                activeColor: Colors.white,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              onPressed: () {},
-            ).rotate(90),
           ],
         ),
       ),
     );
-  }
-
-  Widget defaultThumbnailWidget() {
-    return Container(
-      width: double.maxFinite,
-      height: double.maxFinite,
-      color: Colors.transparent,
-      alignment: Alignment.center,
-      child: Icon(
-        IconsaxPlusLinear.music_filter,
-        color: Colors.white.withOpacity(0.9),
-        size: 21,
-      ),
-    );
-  }
-
-  /// Helper method to build thumbnail image with robust error handling
-  Widget _buildThumbnailImage(String thumbnailData, String title) {
-    try {
-      // Clean the base64 string by removing any whitespace or line breaks
-      final cleanedData = thumbnailData.replaceAll(RegExp(r'\s+'), '');
-      // Attempt to decode the cleaned base64 string
-      final decodedData = const Base64Decoder().convert(cleanedData);
-      return Image.memory(
-        decodedData,
-        fit: BoxFit.cover,
-        width: double.maxFinite,
-        alignment: Alignment.center,
-        height: double.maxFinite,
-      );
-    } catch (e, stackTrace) {
-      log(
-        'Exception decoding base64 for $title',
-        error: e,
-        stackTrace: stackTrace,
-        name: 'SongWidget',
-      );
-      return defaultThumbnailWidget();
-    }
   }
 }

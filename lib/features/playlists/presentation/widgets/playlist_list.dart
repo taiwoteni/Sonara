@@ -14,10 +14,11 @@ class PlaylistList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (playlists.isEmpty) {
       return EmptyList(
-        icon: 'assets/illustrations/empty_1.svg',
+        icon: 'assets/illustrations/playlist.png',
+        isSvg: false,
         iconSize: Size.fromHeight(180),
-        label: 'No playlists found',
-        height: context.screenSize.height * .7,
+        label: 'Create your first playlist',
+        height: context.screenSize.height * .75,
       );
     }
 
